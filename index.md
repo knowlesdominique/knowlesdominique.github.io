@@ -6,7 +6,7 @@ layout: home
 
 <ul>
 <li>
-    #02: <a href="TEST/">TEST - COVID-19 Data for Locations of People You Love</a>
+    #03: <a href="TEST/">TEST - COVID-19 Data for Locations of People You Love</a>
   </li>
   <li>
     #02: <a href="pages/covid-by-your-locations/">COVID-19 Data for Locations of People You Love</a>
