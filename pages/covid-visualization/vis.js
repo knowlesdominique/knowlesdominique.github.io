@@ -567,7 +567,8 @@ var render = function(chart) {
     .style("width", width + margin.left + margin.right)
     .style("height", height + margin.top + margin.bottom)
     .append("g")
-    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+    .on("dblclick", dblclick);
 
   // Mouseovers
   var tip = d3.tip().attr('class', 'd3-tip').html(tip_html(chart));
@@ -860,4 +861,10 @@ var render = function(chart) {
   if (last_index != -1) {
     renderLineChart(svg, last_index);
   }
+
+  //click to open new tab
+  function dblclick(a){
+    window.location.assign("http://en.wikipedia.org/wiki/"+a.properties.name, '_blank');
+ }
+
 };
