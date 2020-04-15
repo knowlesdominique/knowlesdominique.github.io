@@ -1,11 +1,36 @@
----
-layout: bare
 
-social-img: https://91-divoc.com/pages/covid-visualization/img.png
-title: An interactive visualization of the exponential spread of COVID-19
----
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="icon" type="image/png" href="/static/91.png">
 
-<header class="container-fluid header-small">
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@profwade_" />
+    <meta name="twitter:creator" content="@profwade_" />
+    <meta name="twitter:title" content="91-DIVOC : Flip the script on COVID-19" />
+    <meta name="twitter:description" content="An interactive visualization of the exponential spread of COVID-19" />
+    <meta name="twitter:image" content="https://91-divoc.com/pages/covid-visualization/img.png" />
+
+    <meta property="og:title" content="91-DIVOC : Flip the script on COVID-19">
+    <meta property="og:description" content="An interactive visualization of the exponential spread of COVID-19">
+    <meta property="og:image" content="https://91-divoc.com/pages/covid-visualization/img.png">
+    <meta property="og:url" content="https://91-divoc.com/pages/covid-visualization/">
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Roboto|Roboto+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/91.css">
+
+    <title>91-DIVOC : Flip the script on COVID-19</title>
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-67232409-3"></script>
+    <script>window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'UA-67232409-3');</script>
+  </head>
+  <body>
+    <div>
+    <header class="container-fluid header-small">
   <div class="container">
     <h1>
       <a href="/">91-DIVOC</a>
@@ -14,12 +39,11 @@ title: An interactive visualization of the exponential spread of COVID-19
 </header>
 
 <link rel="stylesheet" href="css.css">
-<style>.data-scale-float { float: right; padding-bottom: 3px; }</style>
 
 <div class="container-fluid viz" style="border-bottom: dashed 1px hsla(199, 100%, 6%, 1);">
   <div class="container lead">
     <h2>An interactive visualization of the exponential spread of COVID-19</h2>
-    A project to explore the global growth of COVID-19.  Updated daily.  Inspired by the work of <a href="https://twitter.com/jburnmurdoch" target="_blank">John Burn-Murdoch</a>.
+    A project to explore the global growth of COVID-19.  Updated daily.  <a href="overview.html">Overview and motivations</a>.
   </div>
 </div>
 
@@ -29,6 +53,9 @@ title: An interactive visualization of the exponential spread of COVID-19
     A few interesting bits I found interesting to explore:
     <ul>
       <li>
+        These graphs are not just images.  <b>Hover over any data point</b> to see the data behind it.
+      </li>
+      <li>
         There are two different ways to view the exact same data:
         <ul>
           <li>The <b>logarithmic scale</b> shows a great comparison of the magnitude of growth between countries, but less of the human impact.</li>
@@ -37,13 +64,10 @@ title: An interactive visualization of the exponential spread of COVID-19
         </ul>
       </li>
       <li>
-        These graphs are not just images.  <b>Hover over any data point</b> to see the data behind it.
-      </li>
-      <li>
-        April 10 Feature Update: Dynamic trendlines! [<a href="changes.html" style="color: hsla(199, 100%, 40%, 1);">View all updates</a>]
+        Finally, <a href="changes.html" style="color: hsla(199, 100%, 40%, 1);">the change log</a> documents all major changes and improvements made to this visualization.
       </li>
     </ul>
-
+    <hr>
     This visualization is <b>updated daily</b> with the Johns Hopkins CSSE data, which is typically released around 7:00pm Central.
     <i id="jhu-updated"></i>
   </div>
