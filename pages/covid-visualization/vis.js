@@ -824,7 +824,7 @@ var render = function(chart) {
         else { return 3; }
       })
       .attr("fill", function (d) { return colorScale(d.country); })
-      .on('mouseover', tip.show)
+      .on('mouseover', tip.hide)
       .on('mouseout', tip.hide);
 
     var countryText = svg.append("text")
