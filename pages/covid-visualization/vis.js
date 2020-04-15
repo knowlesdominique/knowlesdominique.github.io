@@ -795,7 +795,7 @@ var render = function(chart) {
       })
       .style("opacity", function (d) {
         if (d[0].country == chart.highlight) { return 1; }
-        else { return 0.3; }
+        else { return 0.9; }
       })      
       .attr("d", d3.line()
         .x(function (d) { return daysScale(d.dayCounter); })
@@ -816,7 +816,7 @@ var render = function(chart) {
       } )
       .style("opacity", function (d) {
         if (d.country == chart.highlight) { return 1; }
-        else { return 0.3; }
+        else { return 0.9; }
       })
       .attr("r", function (d) {
         if (d.cases < 1) { return 0; }
@@ -832,7 +832,7 @@ var render = function(chart) {
       .attr("class", "label-country")
       .style("opacity", function () {
         if (countryData.data[0].country == chart.highlight) { return 1; }
-        else { return 0.3; }
+        else { return 0.9; }
       })
       .style("font-size", function () {
         if (countryData.data[0].country == chart.highlight) { return "15px"; }
