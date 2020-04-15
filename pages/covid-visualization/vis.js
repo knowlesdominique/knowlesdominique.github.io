@@ -81,7 +81,7 @@ function getCookie(cname) {
 // find default state value
 var stored;
 
-var defaultState = "Missouri";
+var defaultState = "Washington";
 if ((stored = getCookie("state")) != "") { defaultState = stored; }
 
 var defaultCountry = "United States";
