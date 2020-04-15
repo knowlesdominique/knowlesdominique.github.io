@@ -56,6 +56,7 @@ var reducer_byCountry = function(result, value, key) {
 };
 
 
+
 // use a cookie to store country data
 // - src: https://www.w3schools.com/js/js_cookies.asp
 function setCookie(cname, cvalue, exdays) {
@@ -96,11 +97,12 @@ var charts = {
     reducer: reducer_byCountry,
     scale: "log",
     highlight: defaultCountry,
+    defaultHighlight: defaultCountry,
     y0: 100,
     xCap: 25,
     id: "chart-countries",
     normalizePopulation: false,
-    show: 50,
+    show: "50",
     sort: function (d) { return -d.maxCases; },
     dataSelection: 'cases',
     showDelta: false,
@@ -113,11 +115,12 @@ var charts = {
     reducer: reducer_byUSstate,
     scale: "log",
     highlight: defaultState,
+    defaultHighlight: defaultState,
     y0: 20,
     xCap: 40,
     id: "chart-states",
     normalizePopulation: false,
-    show: 9999,
+    show: "all",
     sort: function (d) { return -d.maxCases; },
     dataSelection: 'cases',
     dataSelection_y0: { 'active': 20, 'cases': 20, 'deaths': 5, 'recovered': 20 },
@@ -130,12 +133,13 @@ var charts = {
     reducer: reducer_byCountry,
     scale: "log",
     highlight: defaultCountry,
+    defaultHighlight: defaultCountry,
     y0: 1,
     xCap: 25,
     id: "chart-countries-normalized",
     normalizePopulation: "country",
-    show: 50,
-    sort: function (d) { return -d.maxCases + -(d.pop / 1e2); },
+    show: "50",
+    sort: function (d) { return -d.maxCases; }, // function (d) { return -d.maxCases + -(d.pop / 1e2); },
     dataSelection: 'cases',
     dataSelection_y0: { 'active': 1, 'cases': 1, 'deaths': 1, 'recovered': 1 },
     yAxisScale: 'fixed',
@@ -146,11 +150,12 @@ var charts = {
     reducer: reducer_byUSstate,
     scale: "log",
     highlight: defaultState,
+    defaultHighlight: defaultState,
     y0: 1,
     xCap: 40,
     id: "chart-states-normalized",
     normalizePopulation: "state",
-    show: 9999,
+    show: "all",
     sort: function (d) { return -d.maxCases; },
     dataSelection: 'cases',
     dataSelection_y0: { 'active': 1, 'cases': 1, 'deaths': 1, 'recovered': 1 },
@@ -163,55 +168,108 @@ var charts = {
 
 var findNextExp = function(x) {
   return x * 1.5;
-  /*
-  var pow10 = Math.pow(10, Math.ceil( Math.log10(x) ));
-
-  var val;
-  if (x < pow10 / 2) { val = pow10 / 2; }
-  else { val = pow10; }
-
-  if (x > 0.8 * val) { val *= 1.5; }
-  return val;
-  */
 };
+
+
+var transformToTrailingAverage2 = function (data, period) {
+  console.log("transformToTrailingAverage");
+  console.log(data);
+
+  var newdata = [];
+
+  for (var i = 0; i < data.length; i++) {
+    var sum = 0, ct = 0;
+    for (var j = i; j >= 0 && j > i - period; j--) {
+      sum += data[j].cases;
+      ct++;
+    }
+    newdata.push( sum / ct );
+    console.log( sum / ct );
+  }
+
+  for (var i = 0; i < data.length; i++) {
+    data[i].cases = newdata[i];
+  }
+};
+
+var transformToTrailingAverage = function (casesData, period) {
+  console.log(casesData);
+  for (var countryData of casesData) {
+    console.log(countryData.data);
+    transformToTrailingAverage2(countryData.data, period);
+    
+  }
+}
+
+var getHTMLCountryOptionsToSelect = function(allCountries, selectedCountry) {
+  var html = "";
+  for (var country of allCountries) {
+    var el_option = $("<option />").val(country).text(country);
+    if (selectedCountry == country) { el_option.attr("selected", true); }
+    html += el_option.wrap('<p/>').parent().html();
+  }
+  return html;
+}
 
 var prep_data = function(chart) {
   var caseData = chart.fullData;
+  var allCountries = _.map(caseData, 'country').sort();
+  var highlights = [ chart.highlight ];
+  if (chart.extraHighlights) { highlights = highlights.concat( chart.extraHighlights ); }
 
-  if (chart.show < 9999) { caseData = _.take(caseData, chart.show); }
+  switch (chart.show) {
+    case "10":
+      highlight_data = _.filter(caseData, function(d) { return highlights.indexOf(d.country) != -1; });
+      caseData = _.take(caseData, 10);
+      for (var hd of highlight_data) {
+        if ( !_.find(caseData, function (d) { return d.country == hd.country } ) ) {
+          caseData.push(hd);
+        }
+      }
+      break;
+
+    case "50": 
+      highlight_data = _.filter(caseData, function(d) { return highlights.indexOf(d.country) != -1; });
+      caseData = _.take(caseData, 50);
+      for (var hd of highlight_data) {
+        if ( !_.find(caseData, function (d) { return d.country == hd.country } ) ) {
+          caseData.push(hd);
+        }
+      }
+      break;
+
+    case "highlight-only":
+      caseData = _.filter(caseData, function(d) {
+        return highlights.indexOf(d.country) != -1;
+      });
+      break;
+  }
+
   var countries = _.map(caseData, 'country').sort();
 
   // ensure highlighted country shows when new page load with cookie
-  if (_intial_load && countries.indexOf(chart.highlight) == -1) {
-    chart.show = 9999;
+  if (countries.indexOf(chart.highlight) == -1) {
+    chart.show = "all";
     caseData = chart.fullData;
     countries = _.map(caseData, 'country').sort();
-    $("#filter-" + chart.id).val(9999);
+    $("#filter-" + chart.id).val("all");
   }
+
+  /*
+  if (countries.indexOf(chart.highlight) == -1) {
+    chart.message = "No data on highlight";
+  } else {
+    chart.message = null;
+  }
+  */
 
   var $highlight = $("#highlight-" + chart.id);
-  $highlight.html("");
 
-  if (countries.indexOf(chart.highlight) == -1) {
-    if (chart.id.indexOf("states") == -1) { chart.highlight = "United States"; }
-    else { chart.highlight = "New York"; }
+  if ($highlight.html().length < 100) { 
+    $highlight.html(getHTMLCountryOptionsToSelect(allCountries, chart.highlight));
   }
 
-  $.each(countries, function() {
-    var el = $("<option />").val(this).text(this);
-    if (chart.highlight == this) { el.attr("selected", true); }
-    $highlight.append(el);
-  });
-
-  $highlight.change(function (e) {
-    var val = $(e.target).val()
-    chart.highlight = val;
-
-    if (chart.id.indexOf("countries") != -1) { setCookie('country', val, 30); }
-    if (chart.id.indexOf("states") != -1) { setCookie('state', val, 30); }
-    render(chart);
-  });
-
+  if (chart.growthFactor) { transformToTrailingAverage(caseData, 7); }
   chart.data = caseData;
   
   casesMax = _.sortBy(chart.data, function(d) { return -d.maxCases; } )[0];
@@ -249,26 +307,44 @@ var process_data = function(data, chart) {
       // Start counting days only after the first day w/ 100 cases:
       //console.log(agg[country][date]);
       var cases = agg[country][date][chart.dataSelection];
-      if (chart.normalizePopulation) { cases = (cases / popSize) * 1e6; }
+      var rawCaseValue = cases;
 
       if (chart.showDelta) {
         if (i == 0) { cases = 0; }
         else {
           prevCases = agg[country][dates[i - 1]][chart.dataSelection];
-          if (chart.normalizePopulation) {
-            cases = agg[country][date][chart.dataSelection];
-            cases = cases - prevCases;
-            cases = (cases / popSize) * 1e6;
+
+          if (chart.growthFactor) {
+            if (i > 4) {
+              var prevCases2 = agg[country][dates[i - 2]][chart.dataSelection];
+              dToday = cases - prevCases;
+              dYesterday = prevCases - prevCases2;
+
+              if (dToday == 0 || dYesterday == 0) { cases = 0; }
+              else { cases = dToday / dYesterday; }
+            } else {
+              cases = 0;
+            }
           } else {
             cases = cases - prevCases;
           }
         }
       }
 
-      if (dayCounter == -1 && cases >= chart.y0) {
-        dayCounter = 0;
+      if (chart.normalizePopulation) {
+        cases = (cases / popSize) * 1e6;
+        rawCaseValue = (rawCaseValue / popSize) * 1e6;
       }
 
+      if (dayCounter == -1) {
+        if (
+          (!chart.growthFactor && cases >= chart.y0) ||
+          (!chart.growthFactor && chart.showDelta && rawCaseValue >= chart.y0) ||
+          (chart.growthFactor && rawCaseValue >= 100)
+        ) {
+          dayCounter = 0;
+        }
+      }
       
       // Once we start counting days, add data
       if (dayCounter > -1) {
@@ -283,10 +359,10 @@ var process_data = function(data, chart) {
             i: dataIndex++
           });
 
-          if (!(chart.showDelta && cases < 1)) {
-            lastDayCases = cases;
-            maxDay = dayCounter;  
-          }
+          //if (chart.growthFactor || !(chart.showDelta && cases < 1)) {
+          lastDayCases = cases;
+          maxDay = dayCounter;
+          //}
         }
         if (cases > maxCases) { maxCases = cases; }
 
@@ -309,15 +385,14 @@ var process_data = function(data, chart) {
       }
     }
   }
-  
+
   caseData = _.sortBy(caseData, chart.sort);
   chart.fullData = caseData;
 
   chart.xMax = maxDayCounter;
-  if (chart.xMax > 55) { chart.xMax = 55; }
+  if (chart.xMax > 60) { chart.xMax = 60; }
 
   prep_data(chart);
-
   return casesMax;
 };
 
@@ -383,10 +458,125 @@ Promise.all([covidData_promise, populationData_promise])
   });
 
 
+var updateAdditionalHighlight = function(e) {
+  var chartId = $(e.target).data("chart");
+  var chart = charts[chartId];
 
+  var allAdditionalHighlights = $(`.additional-highlight-select[data-chart="${chartId}"]`);
+  chart.extraHighlights = _.map( allAdditionalHighlights.toArray(), function (e) { return $(e).val(); } )
+
+  prep_data(chart);
+  render(chart);
+};
+
+var saveAsSVG = function(e) {
+  var chartId = $(e.target).parent().data("chart");
+  var chartXML = $(`#chart-${chartId}`).html();
+  var hrefData = "data:application/octet-stream;base64," + btoa(chartXML);
+
+  $(e.target).attr("href", "data:application/octet-stream;base64," + btoa(chartXML));
+  $(e.target).attr("download", "91-DIVOC-" + chartId + ".svg");
+}
+
+var saveAsPNG = function(e) {
+  e.preventDefault();
+
+  var chartId = $(e.target).parent().data("chart");
+  var chartSVG = $(`#chart-${chartId} svg`);
+  var chartXML = $(`#chart-${chartId}`).html();
+  var hrefData = "data:image/svg+xml," + encodeURIComponent(chartXML);
+
+  var canvas = $(`<canvas height="${chartSVG.height()}" width="${chartSVG.width()}" />`).get(0);
+  var ctx = canvas.getContext('2d');
+
+  var img = new Image(chartSVG.width(), chartSVG.height());
+  img.onload = function () {
+    console.log("Image loaded.");
+
+    ctx.drawImage(img, 0, 0, chartSVG.width(), chartSVG.height());
+
+    /*
+    var downloadData = canvas.toDataURL("image/png");
+    saveAs(downloadData, "91-DIVOC-" + chartId + ".png");
+    */
+     
+    canvas.toBlob(function (blob) {
+      console.log("Saving.");
+      saveAs(blob, "91-DIVOC-" + chartId + ".png");
+    })
+  }
+
+  //saveAs(downloadData, "linkedin-banner-image.png");
+
+  img.src = hrefData;
+  //console.log(uriChart_2);
+
+
+  /*
+  var uriChart = 'data:image/svg+xml,' + encodeURIComponent(chartXML);
+
+  var chartSVG = $(`#chart-${chartId} svg`);
+  var chart_element = chartSVG.get(0);
+  console.log(chart_element);
+
+  var svgBlob = new Blob([chart_element], {type: 'image/svg+xml;charset=utf-8'});
+  var uriChart_2 = URL.createObjectURL(svgBlob);
+
+  var img = new Image();
+  img.onload = function () {
+    console.log("DONE!");
+    alert("UGH");
+  }
+  img.src = uriChart_2;
+  console.log(uriChart_2);
+
+
+  var canvas = new OffscreenCanvas(chartSVG.width(), chartSVG.height());
+  var ctx = canvas.getContext('2d');
+  ctx.drawImage( uriChart_2, 0, 0, chartSVG.width(), chartSVG.height() );
+
+
+  /*
+  var chartSVG = $(`#chart-${chartId} svg`);
+  var chart_element = chartSVG.get(0);
+  console.log(chart_element);
+
+
+
+  var canvas = new OffscreenCanvas(chartSVG.width(), chartSVG.height());
+  var ctx = canvas.getContext('2d');
+  ctx.drawImage( chart_element, 0, 0, chartSVG.width(), chartSVG.height() );
+  console.log("DONE!");
+
+  /*
+  var img = new Image();
+  img.onload = function () {
+    ctx.drawImage(img, 0, 0);
+    console.log("DONE!");
+  }
+
+  img.src = chartSVG.html();
+  */
+};
 
 
 $(function() {
+  $(".highlight-select").change(function (e) {
+    var chartId = $(e.target).data("chart");
+    var chart = charts[chartId];
+    var val = $(e.target).val();
+
+    chart.highlight = val;
+
+    if (chart.id.indexOf("countries") != -1) { setCookie('country', val, 30); }
+    if (chart.id.indexOf("states") != -1) { setCookie('state', val, 30); }
+
+    if ( _.map(chart.data, "country").indexOf(val) == -1 ) {
+      prep_data(chart);
+    }
+    render(chart);
+  });
+
   $(".trendline-select").change(function(e) {
     var chartId = $(e.target).data("chart");
     var chart = charts[chartId];
@@ -405,15 +595,21 @@ $(function() {
     render(chart);
   });
 
-  $(".scaleSelection").mouseup(function(e) {
+  $(".scaleSelection").click(function(e) {
     var value = $(e.target).data("scale");
     var chartId = $(e.target).data("chart");
     var chart = charts[chartId];
+
+    $(`.scaleSelection[data-chart="${chartId}"]`).removeClass('active').prop('checked', false);
+    $(e.target).prop('checked', true);
+    $(e.target).addClass('active');
 
     if (chart && chart.scale != value) {
       chart.scale = value;
       render(chart);
     }
+
+    return true;
   });
 
   $(".filter-select").change(function (e) {
@@ -430,14 +626,24 @@ $(function() {
     var chart = charts[chartId];
     var value = $(e.target).val();
 
+    chart.showDelta = false;
     if (value == "cases-daily") {
       value = "cases";
       chart.showDelta = true;
     } else if (value == "deaths-daily") {
       value = "deaths";
       chart.showDelta = true;
-    } else {
-      chart.showDelta = false;
+    }
+    
+    chart.growthFactor = false;
+    if (value == "growth-cases") {
+      value = "cases";
+      chart.showDelta = true;
+      chart.growthFactor = true;
+    } else if (value == "growth-deaths") {
+      value = "deaths";
+      chart.showDelta = true;
+      chart.growthFactor = true;      
     }
     
     chart.dataSelection = value;
@@ -445,6 +651,32 @@ $(function() {
     process_data(_rawData, chart);
     render(chart);
   });
+
+  $(".add-highlight").click(function (e) {
+    e.preventDefault();
+
+    var chartId = $(e.target).data("chart");
+    var chart = charts[chartId];
+    var el_add = $(`.extra-highlights[data-chart="${chartId}"]`);
+    var allCountries = _.map(chart.fullData, 'country').sort();
+
+    var html =
+      `<div class="btn-group btn-group-toggle" data-toggle="buttons" style="padding-bottom: 3px;">
+          <div class="input-group-prepend">
+            <span class="input-group-text">Additional Highlight:</span>
+          </div>
+          <select class="form-control additional-highlight-select" onchange="updateAdditionalHighlight(event)" data-chart="${chartId}">
+            ${getHTMLCountryOptionsToSelect(allCountries, chart.defaultHighlight)}
+          </select>
+        </div><br>`;
+
+    el_add.append( html );
+    if (!chart.extraHighlights) { chart.extraHighlights = []; }
+    chart.extraHighlights.push(chart.defaultHighlight);
+    render(chart);
+  })
+
+
 
   _pageReady = true;
   tryRender();
@@ -507,6 +739,11 @@ var tip_html = function(chart) {
 };
 
 var render = function(chart) {
+  // Find data on all highlights
+  var highlights = [ chart.highlight ];
+  if (chart.extraHighlights) { highlights = highlights.concat( chart.extraHighlights ); }
+  
+  // Find primary highlight data
   data_y0 = chart.y0;
   gData = undefined;
   var f = _.find(chart.data, function (e) { return e.country == chart.highlight })
@@ -531,6 +768,7 @@ var render = function(chart) {
   if (width < 400) {
     height = 300;
     isSmall = true;
+    margin.left = 40;
   }
 
   // X-axis scale (days)
@@ -550,7 +788,14 @@ var render = function(chart) {
 
   scale_yMax = chart.yMax;
   if (chart.yAxisScale == "highlight") {
-    scale_yMax = f.maxCases * 1.2;
+    var highlights_data = _.filter(chart.data, function (d) { return highlights.indexOf(d.country) != -1; });
+    var maxCases = _.maxBy(highlights_data, 'maxCases').maxCases;
+    scale_yMax = maxCases * 1.2;
+  }
+
+  if (chart.growthFactor) {
+    scale_y0 = 0.5
+    scale_yMax = 2;
   }
 
   casesScale.domain([scale_y0, scale_yMax]).range([height, 0]);
@@ -562,13 +807,14 @@ var render = function(chart) {
   $("#" + chart.id).html("");
   var svg = d3.select("#" + chart.id)
     .append("svg")
+    .attr("version", 1.1)
+    .attr("xmlns", "http://www.w3.org/2000/svg")    
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
     .style("width", width + margin.left + margin.right)
     .style("height", height + margin.top + margin.bottom)
     .append("g")
-    .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
-    .on("dblclick", dblclick);
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
   // Mouseovers
   var tip = d3.tip().attr('class', 'd3-tip').html(tip_html(chart));
@@ -592,15 +838,24 @@ var render = function(chart) {
   var tickValueIncrease = 5; 
   var tickValues = [];
   while (tickValue <= 1e6) {
-    if (tickValue >= scale_y0) { tickValues.push(tickValue); }
+    if (tickValue >= scale_y0 && tickValue <= scale_yMax) { tickValues.push(tickValue); }
     tickValue *= tickValueIncrease;
 
     if (tickValueIncrease == 5) { tickValueIncrease = 2; }
     else { tickValueIncrease = 5; }
   }
 
-  var y_axis = d3.axisLeft(casesScale).tickFormat(d3.format("0,")); 
-  if (chart.scale == "log") { y_axis.tickValues(tickValues); }
+  var y_axis = d3.axisLeft(casesScale).tickFormat(
+    (!isSmall)?d3.format("0,"):function (val) {
+      var oom = Math.log10(val);
+
+      if (oom <= 3) { return val.toFixed(0); }
+      else if (oom <= 6) { return ((val / 1000).toFixed(0)) + "k"; }
+      else if (oom <= 9) { return ((val / 1e6).toFixed(0)) + "m"; }
+      else if (oom <= 12) { return ((val / 1e9).toFixed(0)) + "b"; }
+      else { return val; }
+  }); 
+  if (chart.scale == "log" && scale_yMax / scale_y0 > 100) { y_axis.tickValues(tickValues); }
   
   svg.append('g')
     .attr("class", "axis")
@@ -617,11 +872,10 @@ var render = function(chart) {
   // Create 35%-line
   let scaleLinesMeta = [];
   if (chart.trendline == "default" || chart.trendline == "35" || chart.trendline == "all") {
-    scaleLinesMeta.push({ is35pct: true, dStart: 0, dasharray: 12, label: "35% daily", sLabel: "35%", gRate: 1.35 });
+    scaleLinesMeta.push({ is35pct: true, dStart: 0, dasharray: 12, label: "1.35x daily", sLabel: "35%", gRate: 1.35 });
   }
 
   var getSacleMeta = function(gData, f, dayTrend, dasharray) {
-    console.log(gData);
     if (gData.length == 0) { return null; }
 
     var d = gData[gData.length - 1];
@@ -631,7 +885,7 @@ var render = function(chart) {
 
     let ggrowth = Math.pow(d.cases / d0.cases, 1 / (d.dayCounter - d0.dayCounter));
 
-    let s = ggrowth.toFixed(2) + `x (${dayTrend}-day trend)`;
+    let s = ggrowth.toFixed(2) + `x (prev. ${dayTrend}-day growth)`;
 
     return {
       dasharray: dasharray,
@@ -644,7 +898,7 @@ var render = function(chart) {
     };
   };
   
-  if (chart.trendline == "default" || chart.trendline == "highlight-1week" || chart.trendline == "all") {
+  if (chart.trendline == "highlight-1week" || chart.trendline == "all") {
     var scaleMetadata = getSacleMeta(gData, f, 7, 6);
     if (scaleMetadata) { scaleLinesMeta.push( scaleMetadata ); }
   }
@@ -713,7 +967,7 @@ var render = function(chart) {
       .attr("y", function () {
         if (y_atMax > scale_yMax) { /* extends off the top */
           if (!scaleLineMeta.is35pct) { xTop_visualOffset += 10; return xTop_visualOffset; }
-          else { return 5; }
+          else { if (isSmall) { return -2; } return 5; }
           
         } else if (y_atMax < scale_y0) { /* extends off bottom */ 
           return height;
@@ -740,7 +994,7 @@ var render = function(chart) {
   else if (chart.dataSelection == 'deaths') { xAxisLabel += "death"; if (chart.y0 != 1) { xAxisLabel += "s"; } }
   else if (chart.dataSelection == 'recovered') { xAxisLabel += "recover"; if (chart.y0 != 1) { xAxisLabel += "ies"; } else { xAxisLabel += "y"; }}
   if (chart.normalizePopulation) { xAxisLabel += "/1m people"; }
-  if (chart.showDelta) { xAxisLabel += "/day"; }
+  //if (chart.showDelta) { xAxisLabel += "/day"; }
 
   svg.append("text")
      .attr("x", width - 5)
@@ -774,35 +1028,36 @@ var render = function(chart) {
     .attr("text-anchor", "end")
     .text(`Data: Johns Hopkins CSSE; Updated: ${_dateUpdated}`);
 
-  last_index = -1;
-  for (var i = 0; i < chart.data.length; i++) {
-    colorScale(i);
-    //console.log(chart.data[i]);
-    if (chart.data[i].data[0].country == chart.highlight) {
-      last_index = i;
-    }
-  }
+  chart.data.sort(function (d1, d2) {
+    var highlight_d1 = ( highlights.indexOf(d1.country) != -1 );
+    var highlight_d2 = ( highlights.indexOf(d2.country) != -1 );
+
+    if      ( highlight_d1 && !highlight_d2) { return 1; }
+    else if (!highlight_d1 &&  highlight_d2) { return -1; }
+    else { return 0; }
+  });
 
   var renderLineChart = function(svg, i) {
     var countryData = chart.data[i];
+    var isHighlighted = (highlights.indexOf(countryData.country) != -1);
 
     svg.datum(countryData.data)
       .append("path")
       .attr("fill", "none")
       .attr("stroke", function (d) { return colorScale(d[0].country); } )
       .attr("stroke-width", function (d) {
-        if (d[0].country == chart.highlight) { return 4; }
+        if (isHighlighted) { return 4; }
         else { return 1; }
       })
       .style("opacity", function (d) {
-        if (d[0].country == chart.highlight) { return 1; }
-        else { return 1.0; }
+        if (isHighlighted) { return 1; }
+        else { return (isSmall) ? 0.15 : 0.3; }
       })      
       .attr("d", d3.line()
         .x(function (d) { return daysScale(d.dayCounter); })
         .y(function (d) { return casesScale(d.cases); })
         .defined(function (d, i, a) {
-          return (d.cases >= 1);
+          return (d.cases >= scale_y0);
         })
       );
 
@@ -812,16 +1067,19 @@ var render = function(chart) {
       .append("circle")
       .attr("cx", function (d) { return daysScale(d.dayCounter); } )
       .attr("cy", function (d) {
-        if (d.cases < 1) { return -999; }
+        if (d.cases < scale_y0) { return height + 5; }
         return casesScale(d.cases);
       } )
       .style("opacity", function (d) {
-        if (d.country == chart.highlight) { return 1; }
-        else { return 1.0; }
+        if (isHighlighted) { return 1; }
+        else { return (isSmall) ? 0.15 : 0.3; }
       })
       .attr("r", function (d) {
-        if (d.cases < 1) { return 0; }
-        if (d.country == chart.highlight) { return 4; }
+        if (d.cases < scale_y0) {
+          if (isHighlighted) { return 4; }
+          else { return 0; }
+        }
+        if (isHighlighted) { return 4; }
         else { return 3; }
       })
       .attr("fill", function (d) { return colorScale(d.country); })
@@ -832,11 +1090,11 @@ var render = function(chart) {
       .attr("fill", function (d) { return colorScale(countryData.data[0].country); })
       .attr("class", "label-country")
       .style("opacity", function () {
-        if (countryData.data[0].country == chart.highlight) { return 1; }
-        else { return 1.0; }
+        if (isHighlighted) { return 1; }
+        else { return 0.3; }
       })
       .style("font-size", function () {
-        if (countryData.data[0].country == chart.highlight) { return "15px"; }
+        if (isHighlighted) { return "15px"; }
         else { return null; }
       })
       .text(countryData.country);
@@ -844,27 +1102,34 @@ var render = function(chart) {
     if (countryData.maxDay + 2 < maxDayRendered || !countryData.data[maxDayRendered - 1]) { 
       countryText
         .attr("x", 5 + daysScale(countryData.maxDay) )
-        .attr("y", casesScale(countryData.lastDayCases) )
+        .attr("y", function () {
+          if (countryData.lastDayCases < scale_y0) { return height + 5; }
+          return casesScale(countryData.lastDayCases);
+        })
         .attr("alignment-baseline", "middle")
     } else {
       countryText
         .attr("x", daysScale(maxDayRendered) - 5 )
-        .attr("y", casesScale(countryData.data[maxDayRendered - 1].cases) - 5 )
+        .attr("y", function () {
+          if (countryData.data[maxDayRendered - 1].cases < scale_y0) { return height + 5; }
+          return casesScale(countryData.data[maxDayRendered - 1].cases) - 5;
+        })
         .attr("text-anchor", "end")
     }
   };
 
   for (var i = 0; i < chart.data.length; i++) {
-    if (i != last_index) { renderLineChart(svg, i); }
+    renderLineChart(svg, i);
   }
 
-  if (last_index != -1) {
-    renderLineChart(svg, last_index);
+  if (!f) {
+    var desc = `${chart.y0} `
+    if (chart.dataSelection == 'cases') { desc += "case"; if (chart.y0 != 1) { desc += "s"; }}
+    else if (chart.dataSelection == 'active') { desc += "active case"; if (chart.y0 != 1) { desc += "s"; }}
+    else if (chart.dataSelection == 'deaths') { desc += "death"; if (chart.y0 != 1) { desc += "s"; } }
+    else if (chart.dataSelection == 'recovered') { desc += "recover"; if (chart.y0 != 1) { desc += "ies"; } else { desc += "y"; }}
+    if (chart.normalizePopulation) { desc += "/1m people"; }
+
+    $("#" + chart.id).append(`<div style="text-align: center;"><i><b>Note:</b> ${chart.highlight} has not reached ${desc}. No data is available to highlight.</i></div>`);
   }
-
-  //click to open new tab
-  function dblclick(a){
-    window.location.assign("http://en.wikipedia.org/wiki/"+a.properties.name, '_blank');
- }
-
 };
