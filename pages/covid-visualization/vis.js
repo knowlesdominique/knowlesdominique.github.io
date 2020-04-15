@@ -11,8 +11,6 @@ $(window).resize(function () {
     if (_client_width != new_width) {
       render( charts['countries'] );
       render( charts['states'] );
-      render( charts['countries-normalized'] );
-      render( charts['states-normalized'] );
     }
   }
 });
