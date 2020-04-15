@@ -11,6 +11,8 @@ $(window).resize(function () {
     if (_client_width != new_width) {
       render( charts['countries'] );
       render( charts['states'] );
+      render( charts['countries-normalized'] );
+      render( charts['states-normalized'] );
     }
   }
 });
@@ -81,7 +83,7 @@ function getCookie(cname) {
 // find default state value
 var stored;
 
-var defaultState = "Washington";
+var defaultState = "New York";
 if ((stored = getCookie("state")) != "") { defaultState = stored; }
 
 var defaultCountry = "United States";
