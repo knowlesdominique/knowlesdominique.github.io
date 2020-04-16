@@ -6,7 +6,7 @@ layout: home
 
 <ul>
 <li>
-    #04: <a href="https://www.google.com">TEST Google page &gt;&gt;</a>
+    #04: <a href="covid-visualization_Copy">TEST page 2 &gt;&gt;</a>
   </li>
   <li>
     #03: <a href="pages/covid-by-your-locations_TEST/">TEST page</a>
