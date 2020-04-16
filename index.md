@@ -6,6 +6,9 @@ layout: home
 
 <ul>
 <li>
+    #05: <a href="pages/covid-visualization/">TEST page 3</a>
+  </li>
+  <li>
     #04: <a href="covid-visualization_Copy/">TEST page 2</a>
   </li>
   <li>
