@@ -5,7 +5,7 @@ layout: home
 <h3>Projects</h3>
 
 <ul>
-<li>
+  <li>
     #03: <a href="pages/covid-by-your-locations - TEST page/">TEST page</a>
   </li>
   <li>
