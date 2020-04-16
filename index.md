@@ -6,10 +6,10 @@ layout: home
 
 <ul>
 <li>
-    #04: <a href="www.google.com">TEST Google page</a>
+    #04: <a href="https://www.google.com">TEST Google page &gt;&gt;</a>
   </li>
   <li>
-    #03: <a href="pages/covid-by-your-locations - TEST page/">TEST page</a>
+    #03: <a href="pages/covid-by-your-locations - TEST page/">TEST page &gt;&gt;</a>
   </li>
   <li>
     #02: <a href="pages/covid-by-your-locations/">COVID-19 Data for Locations of People You Love</a>
