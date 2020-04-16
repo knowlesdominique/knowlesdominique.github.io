@@ -9,7 +9,7 @@ layout: home
     #04: <a href="https://www.google.com">TEST Google page &gt;&gt;</a>
   </li>
   <li>
-    #03: <a href="pages/covid-by-your-locations/">TEST page</a>
+    #03: <a href="pages/covid-by-your-locations_TEST/">TEST page</a>
   </li>
   <li>
     #02: <a href="pages/covid-by-your-locations/">COVID-19 Data for Locations of People You Love</a>
