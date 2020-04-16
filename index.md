@@ -6,7 +6,7 @@ layout: home
 
 <ul>
 <li>
-    #04: <a href="covid-visualization_Copy">TEST page 2 &gt;&gt;</a>
+    #04: <a href="covid-visualization_Copy/">TEST page 2 &gt;&gt;</a>
   </li>
   <li>
     #03: <a href="https://knowlesdominique.github.io/chart/">TEST page</a>
