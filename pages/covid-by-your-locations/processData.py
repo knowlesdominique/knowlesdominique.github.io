@@ -6,92 +6,86 @@ path = '../../../../COVID-19/csse_covid_19_data\csse_covid_19_daily_reports/'
 # if os.getenv("JHU_GIT"):
 #   path = os.getenv("JHU_GIT")
 
-cityTransform = {
-  "Cook, Illinois": "Chicago",
-  "Harris, Texas": "Houston",
-  "Maricopa, Arizona": "Phoenix",
-  "Orange, California": "Santa Ana",
-  "Kings, New York": "Brooklyn, NYC",
-  "Queens, New York": "Queens, NYC",
-  "King, Washington": "Seattle",
-  "Clark, Nevada": "Las Vegas",
-  "Tarrant, Texas": "Fort Worth",
-  "Bexar, Texas": "San Antonio",
-  "Broward, Florida": "Fort Lauderdale",
-  "Santa Clara, California": "San Jose",
-  "Wayne, Michigan": "Detroit",
-  "Alameda, California": "Oakland",
-  "New York, New York": "Manhattan, NYC",
-  "Middlesex, Massachusetts": "Lowell and Cambridge",
-  "Suffolk, New York": "Riverhead",
-  "Hillsborough, Florida": "Tampa",
-  "Bronx, New York": "Bronx, NYC",
-  "Nassau, New York": "Mineola",
-  "Orange, Florida": "Orlando",
-  "Franklin, Ohio": "Columbus",
-  "Hennepin, Minnesota": "Minneapolis",
-  "Oakland, Michigan": "Pontiac",
-  "Travis, Texas": "Austin",
-  "Cuyahoga, Ohio": "Cleveland",
-  "Allegheny, Pennsylvania": "Pittsburgh",
-  "Contra Costa, California": "Martinez",
-  "Mecklenburg, North Carolina": "Charlotte",
-  "Wake, North Carolina": "Raleigh",
-  "Montgomery, Maryland": "Rockville",
-  "Fulton, Georgia": "Atlanta",
-  "Pima, Arizona": "Tucson",
-  "Collin, Texas": "McKinney",
-  "St. Louis, Missouri": "Clayton",
-  "Pinellas, Florida": "Clearwater",
-  "Westchester, New York": "White Plains",
-  "Marion, Indiana": "Indianapolis",
-  "Duval, Florida": "Jacksonville",
-  "Fairfield, Connecticut": "Bridgeport",
-  "Bergen, New Jersey": "Hackensack",
-  "Shelby, Tennessee": "Memphis",
-  "DuPage, Illinois": "Wheaton",
-  "Gwinnett, Georgia": "Lawrenceville",
-  "Erie, New York": "Buffalo",
-  "Prince George's, Maryland": "Upper Marlboro",
-  "Kern, California": "Bakersfield",
-  "Pierce, Washington": "Tacoma",
-  "Macomb, Michigan": "Mount Clemens",
-  "Hidalgo, Texas": "Edinburg",
-  "Middlesex, New Jersey": "New Brunswick",
-  "Montgomery, Pennsylvania": "Norristown",
-  "Baltimore, Maryland": "Towson",
-  "Hamilton, Ohio": "Cincinnati",
-  "Snohomish, Washington": "Everett",
-  "Multnomah, Oregon": "Portland",
-  "Suffolk, Massachusetts": "Boston",
-  "Essex, New Jersey": "Newark",
-  "Oklahoma, Oklahoma": "Oklahoma City",
-  "Essex, Massachusetts": "Salem and Lawrence",
-  "Fort Bend, Texas": "Richmond",
-  "Jefferson, Kentucky": "Louisville",
-  "San Mateo, California": "Redwood City",
-  "Cobb, Georgia": "Marietta",
-  "DeKalb, Georgia": "Decatur",
-  "Lee, Florida": "Fort Myers",
-  "San Joaquin, California": "Stockton",
-  "Monroe, New York": "Rochester",
-  "El Paso, Colorado": "Colorado Springs",
-  "Polk, Florida": "Bartow",
-  "Norfolk, Massachusetts": "Dedham",
-  "Lake, Illinois": "Waukegan",
-  "Jackson, Missouri": "Kansas City",
-  "Davidson, Tennessee": "Nashville",
-  "Will, Illinois": "Joliet",
-  "Bernalillo, New Mexico": "Albuquerque",
-  "Hudson, New Jersey": "Jersey City",
-  "Champaign, Illinois": "Champaign-Urbana"
-}
+stateTranslation = [
+  ['Arizona', 'AZ'],
+  ['Alabama', 'AL'],
+  ['Alaska', 'AK'],
+  ['Arkansas', 'AR'],
+  ['California', 'CA'],
+  ['Colorado', 'CO'],
+  ['Connecticut', 'CT'],
+  ['Delaware', 'DE'],
+  ['Florida', 'FL'],
+  ['Georgia', 'GA'],
+  ['Hawaii', 'HI'],
+  ['Idaho', 'ID'],
+  ['Illinois', 'IL'],
+  ['Indiana', 'IN'],
+  ['Iowa', 'IA'],
+  ['Kansas', 'KS'],
+  ['Kentucky', 'KY'],
+  ['Louisiana', 'LA'],
+  ['Maine', 'ME'],
+  ['Maryland', 'MD'],
+  ['Massachusetts', 'MA'],
+  ['Michigan', 'MI'],
+  ['Minnesota', 'MN'],
+  ['Mississippi', 'MS'],
+  ['Missouri', 'MO'],
+  ['Montana', 'MT'],
+  ['Nebraska', 'NE'],
+  ['Nevada', 'NV'],
+  ['New Hampshire', 'NH'],
+  ['New Jersey', 'NJ'],
+  ['New Mexico', 'NM'],
+  ['New York', 'NY'],
+  ['North Carolina', 'NC'],
+  ['North Dakota', 'ND'],
+  ['Ohio', 'OH'],
+  ['Oklahoma', 'OK'],
+  ['Oregon', 'OR'],
+  ['Pennsylvania', 'PA'],
+  ['Rhode Island', 'RI'],
+  ['South Carolina', 'SC'],
+  ['South Dakota', 'SD'],
+  ['Tennessee', 'TN'],
+  ['Texas', 'TX'],
+  ['Utah', 'UT'],
+  ['Vermont', 'VT'],
+  ['Virginia', 'VA'],
+  ['Washington', 'WA'],
+  ['West Virginia', 'WV'],
+  ['Wisconsin', 'WI'],
+  ['Wyoming', 'WY'],
+]
+
+stateDict = {}
+
+for el in stateTranslation:
+  stateDict[ el[1] ] = el[0]
 
 
-def processDate(fileName):
-  date = fileName[0:10]
+def apply_us_active_cases(row):
+  country = row['Country_Region']
+  if country == "United States":
+    row['Active'] = row['Confirmed'] - row['Recovered'] - row['Deaths']
+  return row
+
+
+def translateState(row):
+  state = str(row["Province_State"]).strip()
+  if ("," in state):
+    if state == "Virgin Islands, U.S.":
+      row["Province_State"] = "Virgin Islands"
+    else:
+      stateCode = state[-2:]
+      if stateCode in stateDict:
+        row["Province_State"] = stateDict[stateCode]
+
+  return row
+
+def processDate(date):
   print(date)
-
   df = pd.read_csv(path + date + ".csv")
 
   if 'Country/Region' in df:
@@ -100,10 +94,23 @@ def processDate(fileName):
       'Province/State': 'Province_State'
     })
 
-  df = df[ df["Country_Region"] == "US" ]
+  df = df[ df['Province_State'].str.contains('Diamond Princess') != True ]
+  df = df[ df['Country_Region'].str.contains('Diamond Princess') != True ]
 
-  df = df[ ["Admin2", "Province_State", "Confirmed", "Deaths"] ] 
-  df = df.astype({"Confirmed": "int32", "Deaths": "int32"})
+  df = df.apply( translateState, axis=1 )
+
+
+  #print(df['Province_State'].str.contains('Diamond Princess'))
+  stateData = df.groupby(['Country_Region', 'Province_State']).agg('sum').reset_index()
+  stateData = stateData[ stateData["Country_Region"] == "US" ]
+
+  countrydata = df.groupby(['Country_Region']).agg('sum').reset_index()
+  countrydata['Province_State'] = ""
+
+  df = stateData.append( countrydata )
+  if 'Active' not in df:
+    df['Active'] = df['Confirmed'] - df['Recovered'] - df['Deaths']
+  df = df[ ["Country_Region", "Province_State", "Confirmed", "Recovered", "Active", "Deaths"] ] 
   df["Date"] = date
 
   return df
@@ -113,56 +120,61 @@ def processDate(fileName):
 import pandas as pd
 import os
 
-files = os.listdir(path)
+df = pd.DataFrame()
+for filename in os.listdir(path):
+  if not filename.endswith(".csv"): continue
+  date = filename[0:10]
 
-df_today = processDate(files[-2])
-df_yesterday = processDate(files[-3])
-df_weekAgo = processDate(files[-9])
-
-
-
-def delta_row_df(row, df, colName):
-  if pd.isna(row["Admin2"]):
-    matches = df[ ( df["Province_State"] == row["Province_State"] ) ]
-  else:
-    matches = df[ ( df["Admin2"] == row["Admin2"] ) & ( df["Province_State"] == row["Province_State"] ) ]
-
-  if len(matches) == 0:
-    a = 1
-    # row[colName + "_confirmed"] = pd.np.nan
-    # row[colName + "_deaths"] = pd.np.nan
-  else:
-    match = matches.iloc[0]
-    row[colName + "_Confirmed"] = row["Confirmed"] - match["Confirmed"]
-    row[colName + "_Deaths"] = row["Deaths"] - match["Deaths"]
-
-  return row
-
-def delta_yesterday(row):
-  return delta_row_df(row, df_yesterday, "dYesterday")
-
-df_today = df_today.apply(delta_yesterday, axis=1)
+  df = df.append(processDate(date))
 
 
-def delta_week(row):
-  return delta_row_df(row, df_weekAgo, "dWeek")
+# == Replace Data to Match Population ==
+countryReplacement = {
+  "US": "United States",
+  "Korea, South": "South Korea",
+  "Taiwan*": "Taiwan",
+  "Bahamas, The": "Bahamas",
+  "The Bahamas": "Bahamas",
+  "Gambia, The": "Gambia",
+  "The Gambia": "Gambia",
+  "Cabo Verde": "Cape Verde",
+  "Mainland China": "China",
+  "Iran (Islamic Republic of)": "Iran",
+  "Republic of Korea": "South Korea",
+  "UK": "United Kingdom",
+  "Vatican City": "Holy See",
+  "Hong Kong SAR": "Hong Kong",
+  "Macao SAR": "Macao",
+  "Russian Federation": "Russia",
+  "St. Martin": "Saint Martin",
+  " Azerbaijan": "Azerbaijan",
+  "Republic of Ireland": "Ireland",
+  "Viet Nam": "Vietnam",
+  "Congo (Brazzaville)": "Republic of the Congo",
+  "Czech Republic": "Czechia",
+  "Republic of Moldova": "Moldova",
+}
 
-df_today = df_today.apply(delta_week, axis=1)
+stateReplacement = {
+  "United States Virgin Islands": "Virgin Islands"
+}
+
+for key in countryReplacement:
+  old = key
+  new = countryReplacement[key]
+  df["Country_Region"] = df["Country_Region"].replace(old, new)
+
+for key in stateReplacement:
+  old = key
+  new = stateReplacement[key]
+  df["Province_State"] = df["Province_State"].replace(old, new)
 
 
-def add_city(row):
-  if pd.isna(row["Admin2"]):
-    return row
-
-  key = row["Admin2"] + ", " + row["Province_State"]
-  if key in cityTransform:
-    row["City"] = cityTransform[key]
-  else:
-    row["City"] = ""
-  return row
-
-df_today = df_today.apply(add_city, axis=1)
+# == Add Population ==
+df = df.astype({"Confirmed": "int32", "Recovered": "int32", "Active": "int32", "Deaths": "int32"})
+df = df.apply(apply_us_active_cases, axis=1)
 
 
-print(df_today)
-df_today.to_csv('jhu-county-data.csv', index=False)
+
+#print(df)
+df.to_csv('jhu-data.csv', index=False)
