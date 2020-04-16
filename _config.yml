@@ -47,6 +47,8 @@ defaults:
 #   - vendor/gems/
 #   - vendor/ruby/
 
+# include
+#   - pages
   
 jekyll-minifier:
   uglifier_args:
