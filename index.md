@@ -9,7 +9,7 @@ layout: home
     #04: <a href="covid-visualization_Copy">TEST page 2 &gt;&gt;</a>
   </li>
   <li>
-    #03: <a href="pages/covid-by-your-locations_TEST/">TEST page</a>
+    #03: <a href="https://knowlesdominique.github.io/chart/">TEST page</a>
   </li>
   <li>
     #02: <a href="pages/covid-by-your-locations/">COVID-19 Data for Locations of People You Love</a>
