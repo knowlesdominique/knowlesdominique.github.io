@@ -83,7 +83,7 @@ function getCookie(cname) {
 // find default state value
 var stored;
 
-var defaultState = "New York";
+var defaultState = "Missouri";
 if ((stored = getCookie("state")) != "") { defaultState = stored; }
 
 var defaultCountry = "United States";
@@ -194,7 +194,7 @@ var prep_data = function(chart) {
 
   if (countries.indexOf(chart.highlight) == -1) {
     if (chart.id.indexOf("states") == -1) { chart.highlight = "United States"; }
-    else { chart.highlight = "New York"; }
+    else { chart.highlight = "Missouri"; }
   }
 
   $.each(countries, function() {
